@@ -4,10 +4,10 @@
 //   /api/proxy?url=https%3A%2F%2Fhttpbin.org%2Fget
 //   /api/proxy/https%3A%2F%2Fhttpbin.org%2Fget
 // Health/ready:
-//   GET /                       -> 200 JSON (status ok)   <-- added
-//   GET /health                 -> 200 "ok"               <-- added
-//   GET /api/proxy              -> 200 JSON (status ok)
-//   GET /api/proxy/health       -> 200 "ok"
+//   GET /                       -> 200 JSON (status good)   <-- added
+//   GET /health                 -> 200 "good"               <-- added
+//   GET /api/proxy              -> 200 JSON (status good)
+//   GET /api/proxy/health       -> 200 "good"
 //
 // Env vars (mapped to cors-anywhere options):
 //   ORIGIN_ALLOWLIST (CSV) -> originWhitelist
@@ -92,7 +92,7 @@ function sendHealthJSON(res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.end(
     JSON.stringify({
-      status: "ok",
+      status: "good",
       name: "cors-anywhere-serverless",
       usage:
         "GET /api/proxy?url=<absolute-url> or /api/proxy/<encoded-absolute-url>",
@@ -104,7 +104,7 @@ function sendHealthJSON(res) {
 function sendHealthText(res) {
   res.statusCode = 200;
   res.setHeader("Content-Type", "text/plain; charset=utf-8");
-  res.end("ok");
+  res.end("good");
 }
 
 module.exports = (req, res) => {
@@ -127,7 +127,7 @@ module.exports = (req, res) => {
   ) {
     return sendHealthJSON(res);
   }
-  // 2) GET /api/proxy/health -> "ok"
+  // 2) GET /api/proxy/health -> "good"
   if (req.method === "GET" && /^\/api\/proxy\/health\/?$/.test(pathname)) {
     return sendHealthText(res);
   }
