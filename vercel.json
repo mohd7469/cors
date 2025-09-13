@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "functions": {
+    "api/proxy.js": {
+      "runtime": "nodejs18.x",
+      "maxDuration": 60,
+      "memory": 1536
+    }
+  },
+  "routes": [
+    { "src": "^/api/proxy/(.*)$", "dest": "/api/proxy.js" },
+    { "src": "^/api/proxy$", "dest": "/api/proxy.js" }
+  ]
+}
