@@ -1,6 +1,8 @@
 {
   "version": 2,
   "routes": [
+    { "src": "^/$", "dest": "/api/proxy.js" },
+    { "src": "^/favicon\\.ico$", "status": 204 },
     { "src": "^/api/proxy/(.*)$", "dest": "/api/proxy.js" },
     { "src": "^/api/proxy$", "dest": "/api/proxy.js" }
   ]
