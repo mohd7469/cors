@@ -4,6 +4,8 @@
 //   /api/proxy?url=https%3A%2F%2Fhttpbin.org%2Fget
 //   /api/proxy/https%3A%2F%2Fhttpbin.org%2Fget
 // Health/ready:
+//   GET /                       -> 200 JSON (status ok)   <-- added
+//   GET /health                 -> 200 "ok"               <-- added
 //   GET /api/proxy              -> 200 JSON (status ok)
 //   GET /api/proxy/health       -> 200 "ok"
 //
@@ -51,7 +53,10 @@ function initServer() {
       "total-route-time",
     ],
     // Optional, matches CORS Anywhere public demo's rate limit mechanism:
-    checkRateLimit: RATE_LIMIT && RATE_LIMIT !== "0" ? require("cors-anywhere/lib/rate-limit")(RATE_LIMIT) : undefined,
+    checkRateLimit:
+      RATE_LIMIT && RATE_LIMIT !== "0"
+        ? require("cors-anywhere/lib/rate-limit")(RATE_LIMIT)
+        : undefined,
   });
   
   return server;
@@ -66,7 +71,11 @@ function makeCorsAnywherePath(req) {
   if (!target) {
     const m = url.pathname.match(/\/api\/proxy\/(.+)/);
     if (m) {
-      try { target = decodeURIComponent(m[1]); } catch { target = m[1]; }
+      try {
+        target = decodeURIComponent(m[1]);
+      } catch {
+        target = m[1];
+      }
     }
   }
   
@@ -81,12 +90,15 @@ function makeCorsAnywherePath(req) {
 function sendHealthJSON(res) {
   res.statusCode = 200;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.end(JSON.stringify({
-    status: "ok",
-    name: "cors-anywhere-serverless",
-    usage: "GET /api/proxy?url=<absolute-url> or /api/proxy/<encoded-absolute-url>",
-    version: "1.0.0"
-  }));
+  res.end(
+    JSON.stringify({
+      status: "ok",
+      name: "cors-anywhere-serverless",
+      usage:
+        "GET /api/proxy?url=<absolute-url> or /api/proxy/<encoded-absolute-url>",
+      version: "1.0.0",
+    })
+  );
 }
 
 function sendHealthText(res) {
@@ -99,9 +111,20 @@ module.exports = (req, res) => {
   const url = new URL(req.url, "http://local"); // for path inspection
   const pathname = url.pathname;
   
-  // Health endpoints:
-  // 1) GET /api/proxy (no ?url=) -> JSON ok
-  if (req.method === "GET" && /^\/api\/proxy\/?$/.test(pathname) && !url.searchParams.get("url")) {
+  // NEW: Root health endpoints (require routing / -> function in vercel.json)
+  if (req.method === "GET" && pathname === "/") {
+    return sendHealthJSON(res);
+  }
+  if (req.method === "GET" && /^\/health\/?$/.test(pathname)) {
+    return sendHealthText(res);
+  }
+  
+  // Existing health endpoints under /api/proxy
+  if (
+    req.method === "GET" &&
+    /^\/api\/proxy\/?$/.test(pathname) &&
+    !url.searchParams.get("url")
+  ) {
     return sendHealthJSON(res);
   }
   // 2) GET /api/proxy/health -> "ok"
@@ -114,10 +137,13 @@ module.exports = (req, res) => {
   if (!pathForCorsAnywhere) {
     res.statusCode = 400;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    return res.end(JSON.stringify({
-      error: "Provide target via ?url= or /api/proxy/<url>, only http(s) allowed.",
-      example: "/api/proxy?url=https%3A%2F%2Fhttpbin.org%2Fget"
-    }));
+    return res.end(
+      JSON.stringify({
+        error:
+          "Provide target via ?url= or /api/proxy/<url>, only http(s) allowed.",
+        example: "/api/proxy?url=https%3A%2F%2Fhttpbin.org%2Fget",
+      })
+    );
   }
   
   // Rewrite req.url so cors-anywhere sees "/https://example.com/..."
